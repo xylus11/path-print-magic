@@ -1,26 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { PathologyApp } from "../components/PathologyApp";
 
 export const Route = createFileRoute("/")({
-  component: Index,
+  component: PathologyApp,
+  head: () => ({
+    meta: [
+      { title: "Pathology Lab Report Generator" },
+      {
+        name: "description",
+        content:
+          "Generate printable pathology lab reports with patient details, test selection, and per-test result pages.",
+      },
+    ],
+  }),
 });
-
-// IMPORTANT: Replace this placeholder. For sites with multiple pages (About, Services, Contact, etc.),
-// create separate route files (about.tsx, services.tsx, contact.tsx) — don't put all pages in this file.
-function PlaceholderIndex() {
-  return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
-    </div>
-  );
-}
-
-function Index() {
-  return <PlaceholderIndex />;
-}
