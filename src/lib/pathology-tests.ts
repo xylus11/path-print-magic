@@ -96,10 +96,6 @@ export const PATHOLOGY_TESTS: PathologyTest[] = [
       { name: "BUN / Creatinine Ratio", unit: "", reference: "10 - 20", method: "Calculated" },
       { name: "eGFR (Estimated GFR)", unit: "mL/min/1.73m²", reference: "> 90 (Normal)", method: "CKD-EPI" },
       { name: "Uric Acid", unit: "mg/dL", reference: "3.5 - 7.2 (M) / 2.5 - 6.0 (F)", method: "Uricase" },
-      { name: "Sodium (Na+)", unit: "mmol/L", reference: "135 - 145", method: "ISE" },
-      { name: "Potassium (K+)", unit: "mmol/L", reference: "3.5 - 5.1", method: "ISE" },
-      { name: "Chloride (Cl-)", unit: "mmol/L", reference: "98 - 107", method: "ISE" },
-      { name: "Bicarbonate (HCO3-)", unit: "mmol/L", reference: "22 - 29", method: "ISE" },
       { name: "Calcium (Total)", unit: "mg/dL", reference: "8.6 - 10.2", method: "Arsenazo III" },
       { name: "Phosphorus (Inorganic)", unit: "mg/dL", reference: "2.5 - 4.5", method: "Phosphomolybdate" },
       { name: "Magnesium", unit: "mg/dL", reference: "1.7 - 2.4", method: "Calmagite" },
@@ -586,7 +582,7 @@ export const PATHOLOGY_TESTS: PathologyTest[] = [
       { name: "SHBG (Sex Hormone Binding Globulin)", unit: "nmol/L", reference: "18.3 - 54.1", method: "CLIA" },
       { name: "FSH", unit: "mIU/mL", reference: "1.5 - 12.4", method: "CLIA" },
       { name: "LH", unit: "mIU/mL", reference: "1.7 - 8.6", method: "CLIA" },
-      { name: "Prolactin", unit: "ng/mL", reference: "4.04 - 15.2", method: "CLIA" },
+      
     ],
   },
   {
@@ -703,8 +699,6 @@ export const PATHOLOGY_TESTS: PathologyTest[] = [
       { name: "RA Factor (Rheumatoid Factor)", unit: "IU/mL", reference: "< 14", method: "Turbidimetry" },
       { name: "Anti-CCP", unit: "U/mL", reference: "< 17", method: "CLIA" },
       { name: "ASO (Anti Streptolysin O)", unit: "IU/mL", reference: "< 200", method: "Turbidimetry" },
-      { name: "CRP", unit: "mg/L", reference: "< 6.0", method: "Turbidimetry" },
-      { name: "Uric Acid", unit: "mg/dL", reference: "3.5 - 7.2", method: "Uricase" },
     ],
   },
   {
