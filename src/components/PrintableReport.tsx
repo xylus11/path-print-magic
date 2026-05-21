@@ -16,6 +16,17 @@ type Props = {
   onBack: () => void;
 };
 
+const fmtDate = (d: Date) => {
+  const dd = String(d.getDate()).padStart(2, "0");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const yyyy = d.getFullYear();
+  let h = d.getHours();
+  const m = String(d.getMinutes()).padStart(2, "0");
+  const ampm = h >= 12 ? "PM" : "AM";
+  h = h % 12 || 12;
+  return `${dd}/${mm}/${yyyy} ${String(h).padStart(2, "0")}:${m}${ampm}`;
+};
+
 export function PrintableReport({
   patient,
   tests,
@@ -24,30 +35,46 @@ export function PrintableReport({
   onBack,
 }: Props) {
   useEffect(() => {
-    const prevTitle = document.title;
+    const prev = document.title;
     document.title = `Pathology Report - ${patient.name}`;
     return () => {
-      document.title = prevTitle;
+      document.title = prev;
     };
   }, [patient.name]);
 
-  const reportDate = new Date().toLocaleString();
-  const reportId = `LPL-${Date.now().toString().slice(-8)}`;
+  const now = new Date();
+  const dateStr = fmtDate(now);
+  const accessionId = `NSL${now.getFullYear().toString().slice(-2)}${String(
+    now.getMonth() + 1
+  ).padStart(2, "0")}${String(now.getDate()).padStart(2, "0")}${String(
+    now.getSeconds()
+  ).padStart(2, "0")}${String(now.getMilliseconds()).padStart(3, "0")}`;
 
   return (
-    <div className="min-h-screen bg-slate-100">
+    <div className="min-h-screen bg-slate-200">
       <style>{`
         @media print {
-          @page { size: A4; margin: 14mm; }
+          @page { size: A4; margin: 0; }
+          html, body { background: white !important; }
           .no-print { display: none !important; }
-          body { background: white !important; }
           .report-page {
             box-shadow: none !important;
             margin: 0 !important;
             page-break-after: always;
-            min-height: auto !important;
+            width: 210mm !important;
+            min-height: 297mm !important;
           }
           .report-page:last-child { page-break-after: auto; }
+        }
+        .report-page {
+          width: 210mm;
+          min-height: 297mm;
+          padding: 14mm 12mm;
+          background: white;
+          color: #000;
+          font-family: Arial, Helvetica, sans-serif;
+          font-size: 11px;
+          line-height: 1.35;
         }
       `}</style>
 
@@ -73,15 +100,15 @@ export function PrintableReport({
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto py-8 space-y-8 print:py-0 print:space-y-0">
+      <div className="py-6 flex flex-col items-center gap-6 print:p-0 print:gap-0">
         {tests.map((test, idx) => (
           <ReportPage
             key={test.id}
             test={test}
             patient={patient}
             values={values[test.id] ?? {}}
-            reportDate={reportDate}
-            reportId={reportId}
+            dateStr={dateStr}
+            accessionId={accessionId}
             pageNum={idx + 1}
             totalPages={tests.length}
           />
@@ -95,140 +122,310 @@ function ReportPage({
   test,
   patient,
   values,
-  reportDate,
-  reportId,
+  dateStr,
+  accessionId,
   pageNum,
   totalPages,
 }: {
   test: PathologyTest;
   patient: Patient;
   values: Record<string, string>;
-  reportDate: string;
-  reportId: string;
+  dateStr: string;
+  accessionId: string;
   pageNum: number;
   totalPages: number;
 }) {
+  const titlePrefix =
+    patient.gender === "Female"
+      ? "Miss."
+      : patient.gender === "Male"
+        ? "Mr."
+        : "";
+
+  const department =
+    test.department ||
+    `DEPARTMENT OF ${(test.category || "PATHOLOGY").toUpperCase()}`;
+
   return (
-    <div className="report-page bg-white shadow-lg mx-4 p-10 print:p-0 print:m-0 print:shadow-none">
-      {/* Letterhead */}
-      <div className="border-b-2 border-blue-700 pb-4 mb-5 flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-blue-800">
-            LOVABLE PATHOLOGY LAB
-          </h1>
-          <p className="text-xs text-slate-600">
-            NABL Accredited • Diagnostic & Research Center
-          </p>
-          <p className="text-xs text-slate-500">
-            123 Health Avenue, Med City • +91 98765 43210
-          </p>
-        </div>
-        <div className="text-right text-xs text-slate-600">
-          <div>
-            <span className="font-semibold">Report ID:</span> {reportId}
-          </div>
-          <div>
-            <span className="font-semibold">Date:</span> {reportDate}
-          </div>
-          <div className="mt-1 text-slate-400">
-            Page {pageNum} of {totalPages}
-          </div>
-        </div>
+    <div className="report-page shadow-lg print:shadow-none flex flex-col">
+      {/* Top spacer where letterhead would be printed */}
+      <div style={{ height: "30mm" }} />
+
+      {/* Patient info box */}
+      <table
+        style={{
+          width: "100%",
+          borderCollapse: "collapse",
+          border: "1px solid #000",
+          fontSize: "10.5px",
+        }}
+      >
+        <tbody>
+          <InfoRow
+            l1="Name"
+            v1={`${titlePrefix}${patient.name.toUpperCase()}`}
+            l2="Centre Details"
+            v2=":INTERLAB - NSL"
+          />
+          <InfoRow
+            l1="Age"
+            v1={`${patient.age} Yrs    Sex: ${patient.gender}`}
+            l2="Accession.ID"
+            v2={`:${accessionId}`}
+          />
+          <InfoRow
+            l1="Collection Date"
+            v1={dateStr}
+            l2="Referred By"
+            v2={`:${patient.refBy || "SELF"}`}
+          />
+          <InfoRow
+            l1="Received Date"
+            v1={dateStr}
+            l2="Report Date"
+            v2={`:${dateStr}`}
+          />
+          <InfoRow
+            l1="Registration Date"
+            v1={dateStr}
+            l2="Ref.No/TRF.No"
+            v2=": /"
+          />
+        </tbody>
+      </table>
+
+      {/* Department header */}
+      <div
+        style={{
+          textAlign: "center",
+          fontWeight: "bold",
+          fontSize: "12px",
+          padding: "4px 0",
+          borderBottom: "1.5px solid #000",
+          marginTop: "0",
+        }}
+      >
+        {department}
       </div>
 
-      {/* Patient strip */}
-      <div className="grid grid-cols-4 gap-3 text-xs border border-slate-300 rounded mb-5">
-        <InfoCell label="Patient Name" value={patient.name} />
-        <InfoCell label="Age / Gender" value={`${patient.age} yrs / ${patient.gender}`} />
-        <InfoCell label="Referred By" value={patient.refBy || "—"} />
-        <InfoCell label="Sample Type" value={test.sampleType} />
-      </div>
-
-      {/* Test heading */}
-      <div className="text-center mb-4">
-        <h2 className="text-lg font-bold text-slate-900 uppercase tracking-wide">
-          {test.name}
-        </h2>
-        <p className="text-xs text-slate-500">
-          Department: {test.category}
-          {test.method ? ` • Method: ${test.method}` : ""}
-        </p>
-      </div>
-
-      {/* Results table — all sub-tests on the same page */}
-      <table className="w-full border-collapse text-sm">
+      {/* Column headers */}
+      <table style={{ width: "100%", borderCollapse: "collapse" }}>
         <thead>
-          <tr className="border-y-2 border-slate-700 text-left text-xs uppercase tracking-wide">
-            <th className="py-2 px-2 w-1/2">Investigation</th>
-            <th className="py-2 px-2">Result</th>
-            <th className="py-2 px-2">Unit</th>
-            <th className="py-2 px-2">Biological Ref. Interval</th>
+          <tr style={{ borderBottom: "1px solid #000" }}>
+            <th style={thStyle}>Test Name</th>
+            <th style={{ ...thStyle, textAlign: "center", width: "20%" }}>
+              Result
+            </th>
+            <th style={{ ...thStyle, textAlign: "center", width: "15%" }}>
+              Unit
+            </th>
+            <th style={{ ...thStyle, width: "30%" }}>Bio. Ref. Range</th>
           </tr>
         </thead>
+      </table>
+
+      {/* Test name + sample type subtitle */}
+      <div style={{ marginTop: "8px" }}>
+        <div style={{ fontWeight: "bold", fontSize: "12px" }}>{test.name}</div>
+        <div style={{ fontStyle: "italic", fontSize: "10px", color: "#000" }}>
+          {test.sampleType}
+        </div>
+      </div>
+
+      {/* Sub-tests */}
+      <table
+        style={{
+          width: "100%",
+          borderCollapse: "collapse",
+          marginTop: "4px",
+        }}
+      >
         <tbody>
           {(test.subTests ?? []).map((sub) => {
-            const result = values[sub.name];
+            const result = values[sub.name] || "";
             const flag = computeFlag(result, sub.reference);
             return (
-              <tr key={sub.name} className="border-b border-slate-200">
-                <td className="py-2 px-2 font-medium text-slate-800">
-                  {sub.name}
+              <tr key={sub.name} style={{ verticalAlign: "top" }}>
+                <td style={{ padding: "4px 4px 4px 0", width: "35%" }}>
+                  <div>{sub.name}</div>
+                  {sub.method && (
+                    <div
+                      style={{
+                        fontStyle: "italic",
+                        fontSize: "9px",
+                        color: "#000",
+                      }}
+                    >
+                      {sub.method}
+                    </div>
+                  )}
                 </td>
-                <td className="py-2 px-2 font-semibold">
-                  <span className={flag === "high" ? "text-red-600" : flag === "low" ? "text-orange-600" : ""}>
-                    {result || "—"}
-                  </span>
-                  {flag === "high" && <span className="ml-1 text-red-600">↑</span>}
-                  {flag === "low" && <span className="ml-1 text-orange-600">↓</span>}
+                <td
+                  style={{
+                    padding: "4px",
+                    width: "20%",
+                    textAlign: "center",
+                    fontWeight: flag ? "bold" : "normal",
+                  }}
+                >
+                  {result || "—"}
+                  {flag === "high" && " H"}
+                  {flag === "low" && " L"}
                 </td>
-                <td className="py-2 px-2 text-slate-600">{sub.unit || "—"}</td>
-                <td className="py-2 px-2 text-slate-600">
-                  {sub.reference || "—"}
+                <td
+                  style={{
+                    padding: "4px",
+                    width: "15%",
+                    textAlign: "center",
+                  }}
+                >
+                  {sub.unit || "—"}
+                </td>
+                <td style={{ padding: "4px", width: "30%" }}>
+                  {(sub.reference || "—")
+                    .split(/\s*\/\s*/)
+                    .map((line, i) => (
+                      <div key={i}>{line}</div>
+                    ))}
                 </td>
               </tr>
             );
           })}
-          {(!test.subTests || test.subTests.length === 0) && (
-            <tr>
-              <td colSpan={4} className="py-4 text-center text-slate-500">
-                No parameters defined.
-              </td>
-            </tr>
-          )}
         </tbody>
       </table>
 
-      <div className="mt-6 text-[10px] text-slate-500 italic">
-        * Results relate only to the sample tested. Please correlate clinically.
+      {/* Comments */}
+      {test.comments && (
+        <div style={{ marginTop: "10px", fontSize: "10px" }}>
+          <div style={{ fontWeight: "bold" }}>Comment:</div>
+          <div style={{ whiteSpace: "pre-line" }}>{test.comments}</div>
+        </div>
+      )}
+
+      {/* End of report */}
+      <div
+        style={{
+          textAlign: "center",
+          fontWeight: "bold",
+          margin: "14px 0 4px",
+        }}
+      >
+        *** End Of Report ***
       </div>
 
-      <div className="mt-12 flex justify-between items-end text-xs">
-        <div>
-          <div className="border-t border-slate-400 pt-1 w-40 text-center">
-            Lab Technician
-          </div>
-        </div>
-        <div>
-          <div className="border-t border-slate-400 pt-1 w-48 text-center">
-            Dr. R. Sharma, M.D. (Pathology)
-            <div className="text-[10px] text-slate-500">Consultant Pathologist</div>
-          </div>
-        </div>
+      {/* Disclaimer */}
+      <div
+        style={{
+          border: "1px solid #000",
+          padding: "6px 8px",
+          fontSize: "9px",
+          lineHeight: "1.4",
+        }}
+      >
+        <div style={{ fontWeight: "bold" }}>Disclaimer:</div>
+        All Results released pertain to the specimen submitted to the lab
+        <ol style={{ margin: "2px 0 0 16px", padding: 0 }}>
+          <li>
+            Test results are dependent on the quality of the sample received by
+            the lab
+          </li>
+          <li>
+            Tests are performed as per schedule given in the test listing and in
+            any unforeseen circumstances, report delivery may be delayed
+          </li>
+          <li>Test results may show interlaboratory variations</li>
+          <li>
+            All dispute and claims are subjected to local jurisdiction only.
+            Clinical correlation advised.
+          </li>
+          <li>Test results are not valid for medico legal purposes</li>
+          <li>
+            For all queries, feedbacks, suggestions, and complaints, please
+            contact customer care support +0124 665 0000
+          </li>
+        </ol>
       </div>
 
-      <div className="mt-4 pt-2 border-t border-slate-300 text-center text-[10px] text-slate-500">
-        --- End of Report ---
+      {/* Signature */}
+      <div style={{ marginTop: "auto", paddingTop: "20px" }}>
+        <div style={{ display: "flex", justifyContent: "flex-end" }}>
+          <div style={{ textAlign: "right", fontSize: "10px" }}>
+            <div
+              style={{
+                fontFamily: "'Brush Script MT', cursive",
+                fontSize: "20px",
+                marginBottom: "2px",
+              }}
+            >
+              Ahilya
+            </div>
+            <div style={{ fontWeight: "bold" }}>
+              Dr. Ahilya Balasaheb Dhadas
+            </div>
+            <div>MD. Pathology</div>
+            <div>Consultant Pathologist</div>
+            <div>MMC RG-No. 2013030578</div>
+          </div>
+        </div>
+
+        <div
+          style={{
+            marginTop: "10px",
+            fontSize: "9px",
+            borderTop: "1px solid #000",
+            paddingTop: "4px",
+            display: "flex",
+            justifyContent: "space-between",
+          }}
+        >
+          <div>
+            <div>
+              Verify this report by scanning the QR code on top. In case of any
+              discrepancy please report to 01246650000
+            </div>
+            <div>
+              This sample is processed at{" "}
+              <b>
+                Nasik Speciality Laboratories; Flat No.1 & 2, C-Wing, Nishigandha
+                Apartment, Untwadi Road, Nasik
+              </b>
+            </div>
+          </div>
+          <div style={{ whiteSpace: "nowrap", paddingLeft: "8px" }}>
+            Page {pageNum} of {totalPages}
+          </div>
+        </div>
       </div>
     </div>
   );
 }
 
-function InfoCell({ label, value }: { label: string; value: string }) {
+const thStyle: React.CSSProperties = {
+  textAlign: "left",
+  padding: "4px 4px",
+  fontSize: "11px",
+  fontWeight: "bold",
+};
+
+function InfoRow({
+  l1,
+  v1,
+  l2,
+  v2,
+}: {
+  l1: string;
+  v1: string;
+  l2: string;
+  v2: string;
+}) {
+  const cell: React.CSSProperties = { padding: "3px 6px", verticalAlign: "top" };
   return (
-    <div className="px-3 py-2 border-r border-slate-200 last:border-r-0">
-      <div className="text-[10px] uppercase text-slate-500">{label}</div>
-      <div className="font-semibold text-slate-800">{value}</div>
-    </div>
+    <tr>
+      <td style={{ ...cell, width: "18%" }}>{l1}</td>
+      <td style={{ ...cell, width: "32%" }}>: {v1}</td>
+      <td style={{ ...cell, width: "18%" }}>{l2}</td>
+      <td style={{ ...cell, width: "32%" }}>{v2}</td>
+    </tr>
   );
 }
 
@@ -239,8 +436,6 @@ function computeFlag(
   if (!result || !reference) return null;
   const num = parseFloat(result);
   if (Number.isNaN(num)) return null;
-
-  // Match patterns: "10 - 20", "< 200", "> 40"
   const range = reference.match(/([\d.]+)\s*-\s*([\d.]+)/);
   if (range) {
     const lo = parseFloat(range[1]);
