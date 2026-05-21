@@ -699,8 +699,6 @@ export const PATHOLOGY_TESTS: PathologyTest[] = [
       { name: "RA Factor (Rheumatoid Factor)", unit: "IU/mL", reference: "< 14", method: "Turbidimetry" },
       { name: "Anti-CCP", unit: "U/mL", reference: "< 17", method: "CLIA" },
       { name: "ASO (Anti Streptolysin O)", unit: "IU/mL", reference: "< 200", method: "Turbidimetry" },
-      { name: "CRP", unit: "mg/L", reference: "< 6.0", method: "Turbidimetry" },
-      { name: "Uric Acid", unit: "mg/dL", reference: "3.5 - 7.2", method: "Uricase" },
     ],
   },
   {
