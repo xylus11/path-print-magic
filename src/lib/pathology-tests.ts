@@ -582,7 +582,7 @@ export const PATHOLOGY_TESTS: PathologyTest[] = [
       { name: "SHBG (Sex Hormone Binding Globulin)", unit: "nmol/L", reference: "18.3 - 54.1", method: "CLIA" },
       { name: "FSH", unit: "mIU/mL", reference: "1.5 - 12.4", method: "CLIA" },
       { name: "LH", unit: "mIU/mL", reference: "1.7 - 8.6", method: "CLIA" },
-      { name: "Prolactin", unit: "ng/mL", reference: "4.04 - 15.2", method: "CLIA" },
+      
     ],
   },
   {
